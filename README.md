@@ -12,6 +12,7 @@ To compile Kitin you need:
 
 Then it's as simple as
 ```sh
+git clone --recursive https://github.com/watercoloursoft/kitin
 cd kitin
 zig build
 ```
