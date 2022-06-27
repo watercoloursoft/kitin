@@ -1,26 +1,21 @@
 const std = @import("std");
 const clap = @import("clap");
 
+const kitin = @import("kitin.zig");
+
 const debug = std.debug;
 const io = std.io;
 
 pub fn main() anyerror!void {
-    const params = comptime clap.parseParamsComptime(
-        \\-h, --help     Display this help and exit.
-        \\-v, --version  Output version information and exit.
-        \\
-    );
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
 
-    var res = try clap.parse(clap.Help, &params, clap.parsers.default, .{});
-    defer res.deinit();
+    const allocator = arena.allocator();
 
-    // `clap.help` is a function that can print a simple help message. It can print any `Param`
-    // where `Id` has a `describtion` and `value` method (`Param(Help)` is one such parameter).
-    // The last argument contains options as to how `help` should print those parameters. Using
-    // `.{}` means the default options.
+    var argIterator = try std.process.ArgIterator.initWithAllocator(allocator);
+    defer argIterator.deinit();
 
-    if (res.args.help)
-        return clap.help(std.io.getStdErr().writer(), clap.Help, &params, .{});
+    try kitin.handleCliCommand(&argIterator);
 }
 
 test "basic test" {
