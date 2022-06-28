@@ -1,7 +1,7 @@
 const std = @import("std");
 const clap = @import("clap");
 
-const kitin = @import("kitin.zig");
+const kitin = @import("cli.zig");
 
 const debug = std.debug;
 const io = std.io;

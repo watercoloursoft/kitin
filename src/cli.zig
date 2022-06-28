@@ -1,7 +1,10 @@
 const std = @import("std");
 const io = std.io;
 
-const initCommand = @import("init.zig");
+const kit = @import("kit.zig");
+
+const log = @import("log.zig");
+const logErr = log.logErr;
 
 pub const Commands = enum {
     git,
@@ -11,10 +14,6 @@ pub const Commands = enum {
 
     help
 };
-
-fn outErr(comptime format: [] const u8, args: anytype) void {
-    io.getStdErr().writer().print(format, args) catch {};
-}
 
 pub fn handleCliCommand(argIterator: *std.process.ArgIterator) !void {
     _ = argIterator.skip();
@@ -28,17 +27,17 @@ pub fn handleCliCommand(argIterator: *std.process.ArgIterator) !void {
 
     switch (command.?) {
         .init => {
-            outErr("Res: {b}", .{initCommand.command()});
+            logErr("Res: {}", .{kit.command()});
         },
         .help => showHelp(),
         else => {
-            outErr("implementation for: {s} not implemented\n", .{commandName});
+            logErr("{s} is not implemented\n", .{commandName});
         },
     }
 }
 
 pub fn showHelp() noreturn {
-    outErr("{s}", .{
+    logErr("{s}", .{
         \\
         \\ Usage: kitin [command]
         \\
@@ -47,7 +46,7 @@ pub fn showHelp() noreturn {
         \\
     });
     inline for (std.meta.fields(Commands)) |command| {
-        outErr(
+        logErr(
             \\    {s}
             \\
         , .{command.name});
@@ -56,6 +55,6 @@ pub fn showHelp() noreturn {
 }
 
 fn unknownCommand(commandName: [] const u8) noreturn {
-    outErr("Unknown command: {s}", .{commandName});
+    logErr("Unknown command: {s}", .{commandName});
     std.os.exit(1);
 }
