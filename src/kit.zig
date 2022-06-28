@@ -86,8 +86,12 @@ pub fn command() !InitResult {
         return .Exists;
     }
 
-    var buf: [std.fs.MAX_PATH_BYTES]u8 = undefined;
+    var buf: [std.fs.MAX_PATH_BYTES] u8 = undefined;
     const cwd = try std.os.getcwd(&buf);
+    var split = std.mem.split(u8, cwd, fs.path.sep_str);
+    while (split.next()) |chunk| {
+        std.debug.print("e {s}\n", .{chunk});
+    }
     logOut("Initialising kitin project with name {s}.\n", .{cwd});
 
     return .Initialised;
