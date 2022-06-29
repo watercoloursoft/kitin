@@ -6,22 +6,14 @@ const kit = @import("kit.zig");
 const log = @import("log.zig");
 const logErr = log.logErr;
 
-pub const Commands = enum {
-    git,
-    init,
-    exec,
-    project,
-
-    help
-};
+pub const Commands = enum { git, init, exec, project, help };
 
 pub fn handleCliCommand(argIterator: *std.process.ArgIterator) !void {
     _ = argIterator.skip();
 
     const commandName = argIterator.next() orelse showHelp();
     const command = std.meta.stringToEnum(Commands, commandName);
-    if (command == null)
-    {
+    if (command == null) {
         unknownCommand(commandName);
     }
 
@@ -54,7 +46,7 @@ pub fn showHelp() noreturn {
     std.os.exit(0);
 }
 
-fn unknownCommand(commandName: [] const u8) noreturn {
+fn unknownCommand(commandName: []const u8) noreturn {
     logErr("Unknown command: {s}", .{commandName});
     std.os.exit(1);
 }
