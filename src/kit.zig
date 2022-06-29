@@ -4,11 +4,13 @@ const fs = std.fs;
 
 const log = @import("log.zig");
 const logOut = log.logOut;
+const logErr = log.logErr;
+const helpCommand = log.helpCommand;
+
+const clap = @import("clap");
 
 pub const KIT_PROJECT = ".kitproj";
 pub const READ_PROJECT_BUFFER_SIZE = 100_000;
-
-pub const InitResult = enum { Initialised, Exists };
 
 pub const KitModule = struct {};
 
@@ -29,7 +31,7 @@ pub const KitProject = struct {
     pub const LoadFromFileError = error{ NotProject, InvalidName };
 
     pub fn loadFromDirectory(self: *KitProject, directory: fs.Dir) !void {
-        var isProject = isKitProject(directory);
+        var isProject = KitProject.isDirectoryKitProject(directory);
 
         if (!isProject) {
             return LoadFromFileError.NotProject;
@@ -68,38 +70,59 @@ pub const KitProject = struct {
             }
         }
     }
+
+    pub fn isDirectoryKitProject(directory: fs.Dir) bool {
+        directory.access(KIT_PROJECT, .{}) catch {
+            return false;
+        };
+        return true;
+    }
 };
 
-pub fn command() !InitResult {
-    var gp = std.heap.GeneralPurposeAllocator(.{ .safety = true }){};
-    defer _ = gp.deinit();
-    var allocator = gp.allocator();
-
+pub fn command(
+    allocator: std.mem.Allocator,
+    argIterator: anytype,
+) !void {
     var project = KitProject.init(allocator);
     defer project.deinit();
 
-    if (isKitProject(fs.cwd())) {
+    const summary = "Initialises an empty kit project.";
+    const params = comptime clap.parseParamsComptime(
+        \\-h, --help             Help message
+        \\<str>...
+        \\
+    );
+
+    if (KitProject.isDirectoryKitProject(fs.cwd())) {
         try project.loadFromDirectory(fs.cwd());
-        std.debug.print("{s}\n", .{project.name});
-        logOut("Kitin already exists.\n", .{});
-
-        return .Exists;
+        logOut("Kitin project \"{s}\" already exists.\n", .{project.name});
+        return;
     }
 
-    var buf: [std.fs.MAX_PATH_BYTES] u8 = undefined;
-    const cwd = try std.os.getcwd(&buf);
-    var split = std.mem.split(u8, cwd, fs.path.sep_str);
-    while (split.next()) |chunk| {
-        std.debug.print("e {s}\n", .{chunk});
-    }
-    logOut("Initialising kitin project with name {s}.\n", .{cwd});
-
-    return .Initialised;
-}
-
-pub fn isKitProject(directory: fs.Dir) bool {
-    directory.access(KIT_PROJECT, .{}) catch {
-        return false;
+    var diag: clap.Diagnostic = undefined;
+    var res = clap.parseEx(clap.Help, &params, clap.parsers.default, argIterator, .{
+        .allocator = allocator,
+        .diagnostic = &diag,
+    }) catch |err| {
+        // Report any useful error and exit
+        diag.report(std.io.getStdErr().writer(), err) catch {};
+        return err;
     };
-    return true;
+    defer res.deinit();
+    helpCommand(summary, &params, res);
+
+    var projectName: []const u8 = undefined;
+
+    if (res.positionals.len < 1) {
+        var buf: [std.fs.MAX_PATH_BYTES]u8 = undefined;
+        const cwd = try std.os.getcwd(&buf);
+        var split = std.mem.split(u8, cwd, fs.path.sep_str);
+        while (split.next()) |chunk| {
+            projectName = chunk;
+        }
+    } else {
+        projectName = res.positionals[0];
+    }
+
+    logOut("Initialising kit project with name {s}.\n", .{projectName});
 }

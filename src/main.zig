@@ -15,7 +15,7 @@ pub fn main() anyerror!void {
     var argIterator = try std.process.ArgIterator.initWithAllocator(allocator);
     defer argIterator.deinit();
 
-    try kitin.handleCliCommand(&argIterator);
+    try kitin.handleCliCommand(allocator, &argIterator);
 }
 
 test "basic test" {

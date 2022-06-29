@@ -8,7 +8,7 @@ const logErr = log.logErr;
 
 pub const Commands = enum { git, init, exec, project, help };
 
-pub fn handleCliCommand(argIterator: *std.process.ArgIterator) !void {
+pub fn handleCliCommand(allocator: std.mem.Allocator, argIterator: *std.process.ArgIterator) !void {
     _ = argIterator.skip();
 
     const commandName = argIterator.next() orelse showHelp();
@@ -19,7 +19,7 @@ pub fn handleCliCommand(argIterator: *std.process.ArgIterator) !void {
 
     switch (command.?) {
         .init => {
-            logErr("Res: {}", .{kit.command()});
+            logErr("Res: {}", .{kit.command(allocator, argIterator)});
         },
         .help => showHelp(),
         else => {
