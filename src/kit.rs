@@ -22,6 +22,7 @@ impl KitProject {
         }
     }
 
+    // loads a .kit file from the current woking directory
     pub fn load_from_file(&mut self) {
         let path = std::path::Path::new(KIT_PROJECT_FILE);
         if path.exists() {
@@ -34,6 +35,7 @@ impl KitProject {
         }
     }
 
+    // checks if a directory has a .kit file, and subsequently a kit project.
     pub fn directory_has_project(directory: &std::path::Path) -> bool {
         return directory
             .join(std::path::Path::new(KIT_PROJECT_FILE))
