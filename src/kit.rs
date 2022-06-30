@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::io::Read;
 
-const KIT_PROJECT_FILE: &str = ".kit";
+const KIT_PROJECT_FILE: &str = "kit.json";
 
 #[derive(Serialize, Deserialize, Debug)]
 struct KitModule {
