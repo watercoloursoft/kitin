@@ -5,6 +5,10 @@ edition = "2021"
 description = "A small project management tool."
 license = "MPL-2.0"
 
+[lib]
+name = "libkit"
+path = "src/kit.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
