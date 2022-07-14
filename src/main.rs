@@ -1,24 +1,26 @@
 use clap::Command;
 
-mod initkit;
-mod kit;
+mod kitin;
+mod project;
 
 fn cli() -> Command<'static> {
     Command::new("kitin")
         .about("A simple project manager")
-        .subcommand_required(true)
+        .subcommand_required(false)
         .arg_required_else_help(true)
         .allow_external_subcommands(true)
         .allow_invalid_utf8_for_external_subcommands(true)
-        .subcommand(initkit::subcommand())
+        .subcommand(project::subcommand())
 }
 
 fn main() {
-    let matches = cli().get_matches();
+    let app = cli();
+    let matches = app.try_get_matches().unwrap_or_else(|e| e.exit());
+
     match matches.subcommand() {
-        Some(("init", sub_matches)) => {
-            initkit::run(sub_matches);
+        Some(("project", sub_matches)) => {
+            project::run(sub_matches);
         }
-        _ => unreachable!(),
+        _ => {}
     }
 }
