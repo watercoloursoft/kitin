@@ -1,8 +1,0 @@
-{
-    "name": "kitrepo",
-    "modules": {
-        "e": {
-            "source": "some E file"
-        }
-    }
-}

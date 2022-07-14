@@ -1,0 +1,4 @@
+name: "kitinrepo"
+modules:
+  egg:
+    source: "Some E file"
