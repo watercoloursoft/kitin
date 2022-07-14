@@ -102,6 +102,7 @@ dependencies = [
  "clap",
  "serde",
  "serde_yaml",
+ "sugar_path",
 ]
 
 [[package]]
@@ -213,6 +214,15 @@ name = "strsim"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
+
+[[package]]
+name = "sugar_path"
+version = "0.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d005dc095332806e0fdea4ec2f6c77d7d3626173b30825e7cd3c416d8a566606"
+dependencies = [
+ "once_cell",
+]
 
 [[package]]
 name = "syn"
