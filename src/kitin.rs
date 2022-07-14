@@ -2,8 +2,10 @@ use serde::{Deserialize, Serialize};
 use std::{
     fmt,
     io::{Read, Write},
+    path::Path,
     str::FromStr,
 };
+use sugar_path::PathSugar;
 
 const KITIN_PROJECT_FILE: &str = "kitin.yaml";
 
@@ -115,6 +117,33 @@ impl KitinProject {
     }
 
     pub fn add_module(&mut self, path: String, module: KitinModule) {
-        self.modules.as_mut().unwrap().insert(path, module);
+        if self.modules.is_none() {
+            self.modules = Some(std::collections::HashMap::new());
+        }
+
+        // need to convert to fsPath and back again because of how
+        // users can input paths.
+        // Example: ".././././src" == "../src"
+        let wrapped_canon_file_path = Path::new(&path.clone()).normalize();
+
+        let module_final_path = wrapped_canon_file_path.to_str().unwrap().to_string();
+
+        if self
+            .modules
+            .as_mut()
+            .unwrap()
+            .contains_key(&module_final_path)
+        {
+            println!("Module at this path is already exists");
+            return;
+        }
+
+        self.modules
+            .as_mut()
+            .unwrap()
+            .insert(module_final_path.clone(), module);
+        self.install_module(module_final_path);
     }
+
+    pub fn install_module(&mut self, path: String) {}
 }

@@ -1,3 +1,6 @@
 ---
 name: example
-modules: ~
+modules:
+  "src\\otherdep":
+    source: "https://github.com/watercoloursoft"
+    source_type: Git
