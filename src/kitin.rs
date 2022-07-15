@@ -1,15 +1,18 @@
+use git2::{ErrorClass, Repository};
+use path_clean::PathClean;
 use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::PathBuf;
 use std::{
-    fmt,
+    fmt::{self, Debug},
     io::{Read, Write},
     path::Path,
     str::FromStr,
 };
-use sugar_path::PathSugar;
 
 const KITIN_PROJECT_FILE: &str = "kitin.yaml";
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub enum KitinModuleSourceType {
     Git,
     Local,
@@ -54,7 +57,7 @@ impl Clone for KitinModuleSourceType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct KitinModule {
     source: Option<String>,
     source_type: Option<KitinModuleSourceType>,
@@ -124,9 +127,9 @@ impl KitinProject {
         // need to convert to fsPath and back again because of how
         // users can input paths.
         // Example: ".././././src" == "../src"
-        let wrapped_canon_file_path = Path::new(&path.clone()).normalize();
+        let wrapped_canon_file_path = path_clean::clean(&path.clone());
 
-        let module_final_path = wrapped_canon_file_path.to_str().unwrap().to_string();
+        let module_final_path = wrapped_canon_file_path;
 
         if self
             .modules
@@ -138,12 +141,52 @@ impl KitinProject {
             return;
         }
 
-        self.modules
-            .as_mut()
-            .unwrap()
-            .insert(module_final_path.clone(), module);
-        self.install_module(module_final_path);
+        if self.install_module(module_final_path.clone(), module.clone()) {
+            self.modules
+                .as_mut()
+                .unwrap()
+                .insert(module_final_path.clone(), module.clone());
+        }
     }
 
-    pub fn install_module(&mut self, path: String) {}
+    pub fn install_module_from_path(&mut self, path: String) -> bool {
+        let unwrapped_modules = self.modules.as_ref();
+        let module = unwrapped_modules.unwrap().get(&path.clone());
+        self.install_module(path, Clone::clone(&module.unwrap()))
+    }
+
+    pub fn install_module(&self, path: String, module: KitinModule) -> bool {
+        let source_type = &module.source_type;
+        if let None = source_type {
+            println!("Source type is not set");
+            return false;
+        }
+
+        match source_type.clone().unwrap() {
+            KitinModuleSourceType::Git => self.install_module_git(path, module.clone()),
+            KitinModuleSourceType::Local => todo!(),
+        }
+    }
+
+    fn install_module_git(&self, path: String, module: KitinModule) -> bool {
+        if module.source_type.unwrap() != KitinModuleSourceType::Git {
+            println!("Unable to use `{}` as a git module", path);
+            return false;
+        }
+
+        let repo = Repository::open(path.clone());
+
+        // If repository doesn't exist then clone it.
+        if let Err(err) = repo {
+            if err.class() != ErrorClass::Os {
+                println!("Unknown error: {}", err);
+                return false;
+            };
+            fs::create_dir_all(Path::new(&path.clone()).parent().unwrap()).unwrap();
+            let mut remote = Repository::clone(&module.source.unwrap(), path);
+            // println!("Unable to open git repository: {}", e.class().fmt(""));
+        }
+
+        return true;
+    }
 }
